@@ -4,6 +4,9 @@
 #.kitchen.yml uses ruby syntax.
 # For Bionic
 
+set -e
+[ -n "$DEBUG" ] && set -x
+
 log_info() {
     echo "[INFO] $*"
 }
@@ -27,19 +30,20 @@ _atexit() {
 show_actions() {
     echo
     echo "You can view container/image:"
-    echo "'docker image list -a'"
-    echo "'docker container list -a'"
+    echo "docker image list -a"
+    echo "docker container list -a"
     echo 
     echo "You can run various kitchen tests cases:"
-    echo "'bundle exec kitchen list'"
-    echo "'bundle exec make kitchen --concurrency=2'"
-    echo "'bundle exec kitchen converge --concurrency=2 control-single-ocata-xenial-20177'" # Run concrete 
+    echo "bundle exec kitchen list"
+    echo "bundle exec make kitchen"
+    echo "bundle exec kitchen converge control-single-ocata-xenial-20177" # Run concrete Instance
     echo
     echo "Connect to conteiner"
     echo "docker exec -it c3bbaca72bed /bin/bash"
     echo
     echo "Run Salt state inside container"
     echo "salt-call --local --file-root /tmp/kitchen/srv/salt --pillar-root /tmp/kitchen/srv/pillar state.apply nginx"
+    echo
 }
 
 make_tuning(){
@@ -56,15 +60,21 @@ install_packags() {
 sefl_kitchen_test(){
     bundle exec make test
     bundle exec make clean
-    bundle exec kitchen list
-    touch ./kitchen-setup-complete-flag
+    clear
+    bundle exec kitchen list && touch ./virtualenv/kitchen-setup-complete-flag
     show_actions
 }
 
 setup_kitchen(){
-    
-#    [ ! -f ./.kitchen.yml ] && log_err "kitchen.yml not found" && return 1
-    [ -f ./kitchen-setup-complete-flag ] && log_info "Setup has been complete" && return 0
+
+    clear
+
+    [ -f ./.kitchen.yml ] || (log_err "kitchen.yml not found"; exit 1)
+    if [ -f ./virtualenv/kitchen-setup-complete-flag ]; then
+	log_info "Setup has been complete"
+	show_actions
+	return 0
+    fi
 
     cat << EOF > ./Gemfile
 source 'https://rubygems.org'
