@@ -46,18 +46,18 @@ show_actions() {
     echo
 }
 
-make_tuning(){
+make_adjustment(){
     sudo usermod -aG docker $USER
+    newgrp docker
 }
 
-install_packags() {
+install_packages() {
     sudo apt update
     sudo apt install -y make python python-pip python-virtualenv ruby-bundler build-essential ruby-all-dev docker.io
     pip install PyYAML
-    make_tuning
 }
 
-sefl_kitchen_test(){
+self_kitchen_tests(){
     bundle exec make test
     bundle exec make clean
     clear
@@ -90,7 +90,8 @@ EOF
     bundle install --path ./virtualenv/
     
     cp .kitchen.yml .kitchen.openstack.yml
-    sefl_kitchen_test
+    self_kitchen_tests
+    make_adjustment
 }
 
 ## Main
@@ -98,13 +99,13 @@ trap _atexit INT TERM EXIT
 
 case $1 in
     selftest)
-        sefl_kitchen_test
+        self_kitchen_tests
         ;;
     help)
         show_actions
         ;;
     *)
-        install_packags
+        install_packages
         setup_kitchen
         ;;
 esac
